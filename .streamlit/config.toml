@@ -1,0 +1,10 @@
+[server]
+maxUploadSize = 50
+
+[browser]
+gatherUsageStats = false
+[server]
+maxUploadSize = 50
+
+[browser]
+gatherUsageStats = false
