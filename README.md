@@ -2,50 +2,44 @@
 
 **Real-Time Distress Signal Detection for Calls**
 
-SpeakSafe is a prototype concept for an ASR-powered tool that listens to audio, converts speech to text, and raises a visible alert when configured distress phrases are detected. Examples might include “help me,” “I’m in danger,” or “call the police.”
+SpeakSafe is a local speech-to-text prototype that checks recorded or uploaded audio for user-configured distress phrases. When it finds a possible match, it shows the recognized phrase and its timestamp. It is designed as an educational ASR project and a demonstration of phrase-based alerting.
 
-> **Project status:** README and project plan. The application source code and tests have not been implemented yet.
+> **Important:** SpeakSafe does not connect to or monitor phone calls. It analyzes audio that a user explicitly records or uploads. It is not an emergency service and cannot guarantee that distress will be detected.
 
-## Planned features
+## Features
 
-- Transcribe microphone or sample audio.
-- Match recognized speech against a configurable list of distress phrases.
-- Display an alert with the matched phrase and timestamp.
-- Adjust phrase matching to catch simple variations while limiting false alarms.
-- Include a demo mode so detection can be tried with sample audio.
+- Record a voice sample in the browser or upload an audio file.
+- Transcribe locally with the Faster-Whisper speech recognition model.
+- Configure phrases to look for, such as “help me” or “call the police.”
+- Show possible matches with the transcript segment and timestamp.
+- Download the transcript as a text file.
+- Run phrase-matching tests without downloading an ASR model.
 
 ## Tools and technologies
 
-The proposed stack for the first version is:
+- **Python 3.10+** — application logic.
+- **Streamlit** — web interface, audio upload, and browser recording.
+- **faster-whisper** — local automatic speech recognition using CTranslate2.
+- **unittest** — tests for phrase parsing, normalization, and detection.
 
-- **Python** for application logic.
-- **Streamlit** for a simple web interface.
-- **faster-whisper** for speech recognition (ASR).
-- **sounddevice** for microphone input, if supported by the operating system.
-- **pytest** for automated tests of phrase matching and related logic.
+## Requirements
 
-These are planned choices; the final stack may change during implementation.
+- Python 3.10 or newer.
+- Internet connection for installing packages and downloading the selected Whisper model the first time. After the model is cached, transcription runs locally.
+- A modern browser and microphone for recording; audio upload can be used instead.
 
-## How it is intended to work
+The first model download can be large. The default **tiny** model is selected to make the first run lighter and faster. You can choose **base** or **small** in the sidebar for potentially better recognition at the cost of speed and memory.
 
-1. The user starts a session and grants microphone access, or selects sample audio.
-2. SpeakSafe transcribes the audio.
-3. The detector checks the transcript against the configured phrase list.
-4. When it finds a match, the interface displays a possible distress alert.
+## Run locally
 
-## Planned setup and run instructions
-
-These commands will apply once the application files and `requirements.txt` are added.
-
-1. Install Python 3.10 or newer.
-2. Clone the repository and move into its folder:
+1. Clone the repository and enter the project folder:
 
    ```bash
    git clone <repository-url>
    cd speaksafe
    ```
 
-3. Create and activate a virtual environment:
+2. Create and activate a virtual environment.
 
    **macOS/Linux**
 
@@ -61,39 +55,59 @@ These commands will apply once the application files and `requirements.txt` are 
    .venv\Scripts\Activate.ps1
    ```
 
-4. Install the project dependencies:
+3. Install dependencies:
 
    ```bash
+   python -m pip install --upgrade pip
    python -m pip install -r requirements.txt
    ```
 
-5. Start the app (planned entry point):
+4. Start SpeakSafe:
 
    ```bash
    streamlit run app.py
    ```
 
-The exact Python version, install steps, and run command should be updated if the implementation uses a different stack or entry point.
+5. Open the local URL printed in the terminal. Upload a recording or use the **Record a voice sample** tab. Choose phrases in the sidebar, then select **Transcribe and check for phrases**.
 
-## Testing
+## Deploy to Streamlit Community Cloud
 
-Automated tests are planned. Once the test suite is added, run it with:
+SpeakSafe is configured for Streamlit Community Cloud. Deployment requires a GitHub repository and a Streamlit Community Cloud account linked to GitHub.
+
+1. Push this project to a GitHub repository.
+2. Sign in to [Streamlit Community Cloud](https://share.streamlit.io/) with GitHub and connect the account.
+3. Choose **Create app**, select the repository and branch, and set `app.py` as the app file.
+4. In advanced settings, select Python 3.10 or newer, then deploy.
+
+The app's upload limit is set to 50 MB. Community Cloud has limited CPU and memory, so the **tiny** model is the recommended setting; larger models may be slow or exceed the host's resources. The model downloads on first use and stays cached on that server while the app environment remains available.
+
+When hosted, audio selected or recorded in the page is sent to the Streamlit server for transcription. Choose a hosting account and sharing setting appropriate for the audio that users may provide. Community Cloud's public/private access follows the app and repository settings.
+
+## Run tests
+
+The detector tests use only the Python standard library and do not download a speech model:
 
 ```bash
-python -m pytest
+python -m unittest discover -s tests -v
 ```
 
-Testing should cover phrase matching, variations in capitalization and punctuation, and cases where no alert should be raised.
+## Project structure
 
-## Important limitations
+```text
+app.py                  Streamlit user interface
+speaksafe/detector.py   Phrase parsing and alert matching
+speaksafe/transcriber.py Local Faster-Whisper wrapper
+tests/                  Unit tests for the detector
+requirements.txt        Python dependencies
+```
 
-SpeakSafe is a prototype and must not be treated as an emergency service, a guarantee of safety, or a replacement for contacting local emergency services. Speech recognition can miss distress phrases or produce false matches because of noise, accents, overlapping speech, language, or poor connectivity. Alerts should be treated as prompts for a person to review, not as proof that someone is in danger.
+## Privacy and limitations
 
-Use microphone input only with appropriate consent and in accordance with applicable laws and policies. Make recording and listening status clear to users. Avoid storing audio or transcripts unless there is a clear need and users have been informed.
-
-## Contributing
-
-Contributions are welcome. Please describe the change and include tests for detector behavior when submitting a pull request.
+- The ASR model runs on the same machine as the app after its initial download. The app does not call a hosted transcription API. In a cloud deployment, that machine is the hosting provider's server, and submitted audio is sent there for processing.
+- SpeakSafe does not save recordings or transcripts to project files. Results live in the current Streamlit session; deployments may have their own infrastructure-level logging or retention, so review hosting settings before using sensitive audio.
+- Speech recognition can miss or mishear words due to noise, language, accents, overlapping speakers, or recording quality. Phrase matching can also produce alerts in harmless contexts.
+- Use microphone recording only with appropriate consent. Make recording status clear to anyone whose speech may be captured.
+- Treat alerts as a prompt for human review, not as proof of danger. Do not rely on SpeakSafe to contact emergency services or as a replacement for them.
 
 ## License
 
